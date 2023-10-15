@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Twitter</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  </head>
+  <body>
+
+    <!-- left side navigation pane -->
+    <div class="layout">
+      <div class="layout__left-sidebar">
+        <div class="sidebar-menu">
+          <img src="/assets/svg/twitter.svg" class="logo" />
+          <div class="sidebar-menu__item">
+            <a routerLink="/feed" class="feed-link">
+              <img src="/assets/svg/home.svg" class="sidebar-menu__item-icon" />
+              Home
+            </a>
+          </div>
+          <div class="sidebar-menu__item2">
+            <img src="/assets/svg/explore.svg" class="sidebar-menu__item-icon2" />
+            Explore
+          </div>
+          <div class="sidebar-menu__item2">
+            <img src="/assets/svg/notifications.svg" class="sidebar-menu__item-icon2"/>
+            Notifications
+          </div>
+          <div class="sidebar-menu__item2">
+            <img src="/assets/svg/messages.svg" class="sidebar-menu__item-icon2" />
+            Messages
+          </div>
+          <div class="sidebar-menu__item sidebar-menu__item--active">
+            <a routerLink="/profile" class="profile-link">
+              <img src="/assets/svg/profile.svg" class="sidebar-menu__item-icon" />
+              Profile
+            </a>
+          </div>
+
+        </div>
+      </div>
+      
+
+      <!-- main content -->
+      <div class="layout__main">
+        <div class="profile">
+          <div class="profile-header">
+            <div class="profile-cover"></div>
+            <div class="profile-info">
+              <!-- main user information -->
+              <img src="{{ user.profilePic }}" alt="Profile Picture" class="profile-picture">
+               <h1 class="profile-name">{{ user.firstName }}, {{ user.lastName }}</h1>
+              <h1 class="profile-name">{{ user.username }}</h1>
+              <button class="editprofile-button" (click)="openPopup()">Edit Profile</button>
+              <p class="profile-bio">{{ user.bio }}</p>
+              <div class="follows">
+                <div class="followers">
+                  <div class="follows_count">200</div>
+                  <div class="follows_label">Followers</div>
+                </div>
+                <div class="following">
+                  <div class="follows_count">{{ followingCount }}</div>
+                  <div class="follows_label">Following</div>
+                </div>
+              </div>
+
+            
+              <!-- make changes - edit - pop up box -->
+              <div class="popup_container" *ngIf="showPopup">
+                <div class="popup" style="width:530px; height:705px;">
+
+                  <div class="popup-header">
+                    <br>
+                    <button (click)="closePopup()" class="exit-button">&times;</button>
+                  </div>
+                  <div class="popup-content">
+                    <form [formGroup]="updateForm" (ngSubmit)="saveChanges()">
+                      <div class="input-group">
+                        <label for="firstName">First Name:</label>
+                        <input type="text" id="firstName" name="firstNname" [formControlName]="'firstName'" placeholder="FirstName" [ngModel]= "user.firstName" />
+                      </div>
+                      <div class="input-group">
+                        <label for="lastName">Last Name:</label>
+                        <input type="text" id="lastName" name="lastName" [formControlName]="'lastName'" placeholder="LastName" [ngModel]= "user.lastName" />
+                      </div>
+                      <div class="input-group">
+                        <label for="bio">Bio:</label>
+                        <textarea id="bio" name="bio"  [formControlName]="'bio'" placeholder="Bio" [ngModel]= "user.bio"></textarea>
+                      </div>
+                      <div class="input-group">
+                        <label for="photo">Profile Picture:</label>
+                        <input type="file" id="photo" name="photo" (change)="onFileSelected($event)" accept="image/*" />
+                      </div>
+                      <div class="photo-container">
+                        <img [src]="user.profilePic" *ngIf="user.profilePic" alt="User Photo" />
+                      </div>
+                      <br>
+                      <button type="submit">Save</button>
+                    </form>
+                  </div>
+                </div>    
+              </div>
+            </div>
+          </div>
+        
+
+          <!-- bottom page content -->
+          <div class="profile-content">
+
+            <section class="tweets">
+              <div class="heading">
+                <p [class.active-label]="activeLabel === 'tweets'" (click)="changeContent('tweets')">Tweets</p>
+                <p [class.active-label]="activeLabel === 'likedTweets'" (click)="changeContent('likedTweets')">Liked Tweets</p>
+                <p [class.active-label]="activeLabel === 'retweets'" (click)="changeContent('retweets')">Retweets</p>
+              </div>
+              <hr>
+            </section>
+
+            <!-- Tweets Content -->
+            <section *ngIf="activeLabel === 'tweets'">
+            <div *ngIf="showTweets">
+                <div *ngFor="let tweet of userTweets$">
+                  <div class="tweet">
+                     <img class="tweet__author-logo" src="{{ tweet.profilePic }}" />
+                    
+                    <div class="tweet__main">
+                      <div class="tweet__header">
+                        <div class="tweet__author-name">
+                          {{ tweet.firstName }}, {{ tweet.lastName }}
+                        </div>
+                        <div class="tweet__author-email">
+                          - {{ tweet.username }}
+                        </div>
+                        <div class="tweet__publish-time">
+                          ({{ tweet.createdDate | date:'dd/MM/yy HH:mm'}})
+                        </div>
+                      </div>
+                      <div class="tweet__content">
+                        {{ tweet.tweetText }}
+                      </div>
+                      <br>
+                      <div class="tweet__footer">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <div *ngIf="userTweets$.length === 0">
+                <p>No tweets available. <br> User has not created any tweet yet.</p>
+              </div>
+            </div>
+            </section>
+
+
+            <!-- Liked Tweets Content -->
+            <section *ngIf="activeLabel === 'likedTweets'">
+            <div *ngIf="showLikedTweets">
+                <div *ngFor="let tweet of userLikedTweets$">
+                  <div class="tweet">
+                    <img class="tweet__author-logo" src="{{ tweet.profilePic }}" />
+                    <div class="tweet__main">
+                      <div class="tweet__header">
+                        <div class="tweet__author-name">
+                          {{ tweet.firstName }}, {{ tweet.lastName }}
+                        </div>
+                        <div class="tweet__author-email">
+                          - {{ tweet.username }}
+                        </div>
+                        <div class="tweet__publish-time">
+                          ({{ tweet.createdDate | date:'dd/MM/yy HH:mm'}})
+                        </div>
+                      </div>
+                      <div *ngIf="tweet.retweetedBy" class="post__originalAuthor">
+                        <p class="retweet-info">Reposted Tweet - originally created by: {{ tweet.username }} </p>
+                      </div> 
+                      <div class="tweet__content">
+                        {{ tweet.tweetText }}
+                      </div>
+                      <br>
+                      <div class="tweet__footer">
+                        <div class="likes-wrapper">
+                          <span class="material-icons" [ngClass]="{ 'liked': tweet.isLiked }" >favorite_border</span>
+                          <span class="likes-count">{{ tweet.likeCounter }}</span>
+                        </div>    
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <div *ngIf="userLikedTweets$.length === 0">
+                <p>No tweets available. <br> User has not liked any tweet yet.</p>
+              </div>
+            </div>
+            </section>
+
+
+            <!-- Retweets Content -->
+            <section  *ngIf="activeLabel === 'retweets'">
+            <div *ngIf="showRetweets">
+            <div class="retweeted-tweets">
+                <div *ngFor="let tweet of userRetweets$">
+                  <div class="tweet">
+                    <img class="tweet__author-logo" src="{{ tweet.profilePic }}" />
+                    <div class="tweet__main">
+                      <div class="tweet__header">
+                        <div class="tweet__author-name">
+                          {{ tweet.firstName }}, {{ tweet.lastName }}
+                        </div>
+                        <div class="tweet__author-email">
+                          - {{ tweet.username }}
+                        </div>
+                        <div class="tweet__publish-time">
+                          ({{ tweet.createdDate | date:'dd/MM/yy HH:mm'}})
+                        </div>
+                      </div>
+                        <div *ngIf="tweet.isRetweeted" class="post__originalAuthor">
+                          <p class="retweet-info">~ Reposted Tweet ~ </p>
+                        </div>         
+                      <div class="tweet__content">
+                        {{ tweet.tweetText }}
+                      </div>
+                      <br>
+                      <div class="tweet__footer">
+                        <div class="retweets-wrapper">
+                          <span class="material-icons clickable" >repeat</span>
+                          <span class="retweets-count">{{ tweet.retweetCounter + 1}} </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+               <div *ngIf="userRetweets$.length === 0">
+                <p>No retweeted tweets. <br> User has not retweeted any tweet yet.</p>
+              </div>
+            </div>
+            </div>
+            </section>
+  
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right SideBar Content -->
+      <div class="layout__right-sidebar-container">
+        <div class="layout__right-sidebar">
+          <br>
+          <div class="who-to-follow">
+            <div class="who-to-follow__block">
+              <div class="who-to-follow__heading">
+                Who to follow
+              </div>
+            </div>
+
+            <div *ngFor="let user of allUsers$; let i = index" class="who-to-follow__block">
+              <!-- Display user information here -->
+              <div class="who-to-follow__block">
+                  <img class="who-to-follow__author-logo" src="{{ user.profilePic }}"/>
+                  <div class="who-to-follow__content"  [routerLink]="['/follower-profile', { id: user.id }]">
+                        <div class="who-to-follow__author-name">
+                          {{ user.firstName }}
+                        </div>
+                        <div class="who-to-follow__author-email">
+                          {{ user.username }}
+                        </div>
+                    </div>  
+                      <button class="who-to-follow__button" (click)="toggleFollow(user)" [ngClass]="{ 'followed': isFollowed(user) }">
+                      {{ isFollowed(user) ? 'Unfollow' : 'Follow' }}
+                    </button>
+              </div>
+            </div>
+          </div>
+          <br>
+
+          <!-- whats happening section -->
+          <div class="whats-happening">
+            <div class="whats-happening__block">
+              <div class="whats-happening__heading">
+                Whats Happening
+              </div>
+            </div>
+            <div class="whats-happening__block">
+              <div class="whats-happening__trend-name">
+                COVID-19 Vaccination Milestone
+              </div>
+              <div class="whats-happening__meta-information">
+                The global COVID-19 vaccination effort reaches a new milestone with over 1 billion doses administered worldwide.
+              </div>
+            </div>
+            <div class="whats-happening__block">
+              <div class="whats-happening__trend-name">
+                New Space Exploration Mission Announced
+              </div>
+              <div class="whats-happening__meta-information">
+                NASA announces plans for a groundbreaking mission to explore Europa, one of Jupiter's moons, in search of signs of life.
+              </div>
+            </div>
+            <div class="whats-happening__block">
+              <div class="whats-happening__trend-name">
+                Tech Giant Unveils Revolutionary New Smartphone
+              </div>
+              <div class="whats-happening__meta-information">
+                Leading tech company introduces a cutting-edge smartphone with advanced features and an innovative design.
+              </div>
+            </div>
+        </div>
+
+        </div>
+      </div>
+      
+    </div>
+  </body>
+</html>

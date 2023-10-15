@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Twitter</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="layout__left-sidebar">
+        <div class="sidebar-menu">
+          <!-- This is the left side pane menu -->
+          <img src="/assets/svg/twitter.svg" class="logo" />
+          <div class="sidebar-menu__item sidebar-menu__item--active">
+            <img src="/assets/svg/home.svg" class="sidebar-menu__item-icon" />
+            Home
+          </div>
+          <div class="sidebar-menu__item2">
+            <img src="/assets/svg/explore.svg" class="sidebar-menu__item-icon2" />
+            Explore
+          </div>
+          <div class="sidebar-menu__item2">
+            <img src="/assets/svg/notifications.svg" class="sidebar-menu__item-icon2"/>
+            Notifications
+          </div>
+          <div class="sidebar-menu__item2">
+            <img src="/assets/svg/messages.svg" class="sidebar-menu__item-icon2" />
+            Messages
+          </div>
+          <div class="sidebar-menu__item">
+            <a routerLink="/profile" class="profile-link">
+              <img src="/assets/svg/profile.svg" class="sidebar-menu__item-icon" />
+              Profile
+            </a>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="layout__main">
+        <div class="sticky">
+          <div class="top_feed">
+            <div class="top_feed__header">
+              <h2>Welcome, {{ username }}</h2>
+            </div>
+            <!-- tweetbox starts -->
+            <div class="tweetBox" >
+              <form id="createTweetForm" [formGroup]="createTweetForm" (ngSubmit)="createTweet()">
+                <div class="tweetbox__input"> 
+                  <img *ngIf="user && user.profilePic" src="{{ user.profilePic }}" alt="profilePic" />
+                  <input type="text" name="tweet" placeholder="What's happening?" [formControlName]="'tweetText'"/>
+                </div>
+                <button class="tweetBox__tweetButton clickable" [disabled]="createTweetForm.invalid">Tweet</button>
+                <div *ngIf="createTweetForm?.get('tweetText')?.hasError('characterLimitExceeded')" class="error">
+                  <b>Tweet must contain less than 100 characters.</b>
+                </div>
+                <div *ngIf="errorMessage" class="error">
+                  <b>{{ errorMessage }}</b>
+                </div>
+               </form>
+            </div>
+            <!-- tweetbox ends -->
+          </div>
+        </div> 
+
+      
+        <!-- Feed -->
+        <div *ngIf="tweets$.length > 0" > 
+          <div *ngFor="let tweet of tweets$">
+            <div class="tweet" >
+               <img class="tweet__author-logo" [src]="tweet.retweetedBy ? tweet.retweetedBy.profilePic : tweet.profilePic" />
+               <div class="tweet__main">
+                <div class="tweet__header">
+                   <div class="tweet__author-name">
+                    {{ tweet.retweetedBy ? 
+                      tweet.retweetedBy.firstName + ' ' + tweet.retweetedBy.lastName
+                      : tweet.firstName + ' ' + tweet.lastName }}
+                  </div>
+                  <div class="tweet__author-email">
+                    - {{ tweet.retweetedBy ? tweet.retweetedBy.username : tweet.username }}
+                  </div>
+                  <div class="tweet__publish-time">
+                     {{ (tweet.retweetedBy ? tweet.retweetedBy.createdDate : tweet.createdDate) | date:'dd/MM/yy HH:mm' }}
+                  </div>
+                </div>
+                  <div *ngIf="tweet.retweetedBy && tweet.retweetedBy.username" class="post__originalAuthor">
+                  <p class="retweet-info">~ Reposted Tweet ~ originally created by: {{ tweet.username }}</p>
+                </div>           
+                <div class="tweet__content">
+                  {{ tweet.tweetText }}
+                </div>
+                <br>
+                <div class="tweet__footer">
+                  <div class="retweets-wrapper">
+                     <span class="material-icons clickable" (click)="retweet(tweet)">repeat</span>
+                    <span class="retweets-count">
+                      {{ tweet.retweetCounter }}
+                    </span>
+                 </div>
+                  <div class="likes-wrapper">
+                     <span class="material-icons" [ngClass]="{ 'liked': tweet.isLiked || (tweet.retweetedBy && tweet.retweetedBy.isLiked) }" (click)="toggleLike(tweet)">favorite_border</span>
+                     <span class="likes-count"> {{ tweet.retweetedBy ? tweet.retweetedBy.likeCounter : tweet.likeCounter }}</span>
+                  </div>
+                  <div class="comment-wrapper">
+                    <span class="material-icons clickable" (click)="toggleTextBox(tweet)">comment</span>
+                    <span class="comments-count">{{ tweet.commentCounter }}</span>
+                  </div>
+                </div>
+              </div>
+
+              
+              <!-- Comment pop up box  -->
+              <div class="popup_container" *ngIf="tweet === activeTweet">
+                <div class="popup">
+                  <div class="popup-header">
+                    <br>
+                    <button (click)="closePopup()" class="exit-button">&times;</button>
+                  </div>
+                  <div class="popup-content">
+                    <input type="text" [(ngModel)]="activeTweet.commentText" class="comment-input-text" placeholder="Write your comment...">
+                    <button (click)="submitText(tweet); refreshComments(tweet)" class="comment-submit-button">Submit</button>
+                  </div>
+                  <div class="comment_section">
+                    <p class="comment_section_p">Comments:</p>
+                      <div *ngIf="tweet.comments">
+                      <ul>
+                          <li *ngFor="let comment of tweet.comments">
+                          <div class="comment">
+                            <p class="comment-text">{{ comment.text }}</p>
+                            <p class="comment-author">- {{ comment.username }} ({{ comment.createdDate | date:'dd/MM/yy HH:mm'}})</p>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>    
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!tweets$ || tweets$.length ===0">
+          No tweets found
+        </div> 
+
+      </div>
+
+      <!-- Right sidebar -->
+      <div class="layout__right-sidebar-container">
+        <div class="layout__right-sidebar">
+          <button class="logOutButton clickable" (click)="logout()">Logout</button>
+          <br><br>
+          <!-- search block -->
+          <div class="search__block">
+          <div class="widgets">
+            <div class="search_widget">
+              <span class="material-icons widgets__searchIcon"> search </span>
+              <input type="text" [(ngModel)]="searchQuery" (keyup)="searchTweets()" placeholder="Search tweets" />
+            </div>
+          </div>
+          </div>
+          <!-- next / previous page -->
+          <div class="pagination">
+            <button class="pagesButtons clickable" (click)="previousPage()">Previous</button>
+            <div class="navHeading">Page: {{ currentPage }}</div>
+            <button class="pagesButtons clickable" (click)="nextPage()">Next</button>
+          </div>
+          <br>
+          <!-- trends for you section -->
+          <div class="trends-for-you">
+            <div class="trends-for-you__block">
+              <div class="trends-for-you__heading">
+                Trends for you
+              </div>
+            </div>
+            <div class="trends-for-you__block">
+              <div class="trends-for-you__meta-information">
+                Trending in Ireland
+              </div>
+              <div class="trends-for-you__trend-name">
+                <a href="https://www.apple.com" target="_blank">#Apple</a>
+              </div>
+              <div class="trends-for-you__meta-information">
+                200k Tweets
+              </div>
+            </div>
+            <div class="trends-for-you__block">
+              <div class="trends-for-you__meta-information">
+                Trending in America
+              </div>
+              <div class="trends-for-you__trend-name">
+                <a href="https://www.coachella.com" target="_blank">#Coachella</a> 
+              </div>
+              <div class="trends-for-you__meta-information">
+                2,800 Tweets
+              </div>
+            </div>
+            <div class="trends-for-you__block">
+              <div class="trends-for-you__meta-information">
+                Trending - Spain
+              </div>
+              <div class="trends-for-you__trend-name">
+                <a href="https://en.wikipedia.org/wiki/Music" target="_blank">#Music</a> 
+              </div>
+              <div class="trends-for-you__meta-information">
+                2,450 Tweets
+              </div>
+            </div>
+            <div class="trends-for-you__block">
+              <div class="trends-for-you__meta-information">
+                Trending - India
+              </div>
+              <div class="trends-for-you__trend-name">
+                <a href="https://en.wikipedia.org/wiki/Dance" target="_blank">#Dance</a> 
+              </div>
+              <div class="trends-for-you__meta-information">
+                1,500 Tweets
+              </div>
+            </div>
+            <div class="trends-for-you__block">
+              <div class="trends-for-you__meta-information">
+                Trending - UK
+              </div>
+              <div class="trends-for-you__trend-name">
+                <a href="https://www.britannica.com/topic/food" target="_blank">#Food</a> 
+              </div>
+              <div class="trends-for-you__meta-information">
+                800 Tweets
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    
+  </body>
+</html>
+

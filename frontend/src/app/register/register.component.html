@@ -1,0 +1,61 @@
+
+<body>
+  <div class="main">
+    <div class="main-wrapper">
+      <div class="left"></div>
+      <div class="right">
+        <div class="middle">
+          <span class="icon icon--bird"></span>
+          <h2>Join the community! <br> Register for Twitter today</h2>
+          <!-- begining of form  -->
+          <form [formGroup]="registerForm" (ngSubmit)="register()" >
+          <div class="input-group">
+            <!-- first name must be less than 20 characters and required -->
+            <input type="text" id="firstName" name="firstName" required placeholder="FirstName" [formControlName]="'firstName'"/>
+            <div *ngIf="registerForm?.get('firstName')?.hasError('required')"  class="error">First Name is required</div>
+            <div *ngIf="registerForm?.get('firstName')?.hasError('nameLength')"  class="error">First Name must be less than 20 characters</div>
+          </div>
+          <br>
+          <div class="input-group">
+            <!-- last name must be less than 20 characters and required -->
+            <input type="text" id="lastName" name="lastName" required placeholder="LastName" [formControlName]="'lastName'"/>
+            <div *ngIf="registerForm?.get('lastName')?.hasError('required')" class="error">Last Name is required.</div>
+            <div *ngIf="registerForm?.get('lastName')?.hasError('nameLength')" class="error">Last Name must be less than 20 characters.</div>
+          </div>
+          <br>
+          <div class="input-group">
+            <!-- username is required -->
+            <input type="text" id="username" name="username" required placeholder="Username" [formControlName]="'username'"/>
+            <div *ngIf="registerForm?.get('username')?.hasError('required')" class="error">Username is required.</div>
+          </div>
+          <br>
+          <div class="input-group">
+            <!-- email must be valid and required -->
+            <input type="email" id="email" name="email" required  placeholder="Email" [formControlName]="'email'" >
+            <div *ngIf="registerForm?.get('email')?.hasError('required')" class="error">Email is required.</div>
+            <div *ngIf="registerForm?.get('email')?.hasError('invalidEmail')" class="error">Invalid email address.</div>
+            <div *ngIf="registerForm?.get('email')?.hasError('notUniqueEmail')" class="error">Email has been used before</div>
+          </div>
+          <br>
+          <div class="input-group">
+            <!-- password needs to be valid and required -->
+            <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Password" [formControlName]="'password'" />
+            <div *ngIf="registerForm?.get('password')?.hasError('required')" class="error">Password is required.</div>
+            <div *ngIf="registerForm?.get('password')?.hasError('invalidPassword')" class="error">
+              Invalid Password. Must be between 8 and 12 characters and include at least one special character, one lowercase letter, and one uppercase letter.
+            </div>
+          </div>
+          <br>
+          <button class="btn-sign-up" type="submit" [disabled]="registerForm.invalid">Sign Up</button>
+        </form>
+        <!-- end of form -->
+
+        <br>
+        <a routerLink="/login">
+          Have already registered? Login here!
+        </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
